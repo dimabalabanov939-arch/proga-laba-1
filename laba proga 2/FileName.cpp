@@ -6,10 +6,80 @@ using namespace std;
 class Groups
 {
 public:
-	string NameGroup;
+	string NameGroupe;
 	int unsigned quantity;
 };
-void menu1(Groups ArrStudents)
+void CheckCin()
+{
+	if (cin.fail())
+	{
+		cout << "Input error! Please enter a number." << endl;
+		cin.clear();
+		cin.ignore(10000000, '\n');
+	}
+	else
+	{
+
+	}
+}
+
+void AddGroupe(Groups*& ArrGroupe, int& size)
+{
+	Groups* temp_mas = new Groups[size + 1];
+
+	for (int i = 0; i < size; i++)
+	{
+		temp_mas[i] = ArrGroupe[i];
+	}
+
+	cout << "\nEnter the name groupe: ";
+	cin.ignore(10000000, '\n');
+	getline(cin, temp_mas[size].NameGroupe);
+	cout << "\nEnter quantity students  (quantity < 30!!!): ";
+	while(!(cin >> temp_mas[size].quantity))
+	    {
+		CheckCin();
+		}
+	while(temp_mas[size].quantity > 30)
+	{
+	    cout << "Error!!! Quantity cannot exceed 30!!! Enter quantity students again: ";
+		cin >> temp_mas[size].quantity;
+	}
+
+
+	delete[] ArrGroupe;
+
+
+	ArrGroupe = temp_mas;
+	size ++;
+	cout << "Group added successfully!\n";
+}
+void EnterDataManually(Groups *&ArrGroupe, int& size)
+{
+	bool Flag = false;
+	while (Flag == false)
+	{
+		cout << "\n1. Add group" << endl;
+		cout << "2. Return to the menu" << endl;
+		int n = 0;
+		cin >> n;
+		CheckCin();
+		switch (n)
+		{
+		case 1:
+			AddGroupe(ArrGroupe, size);
+			break;
+		case 2:
+			Flag = true;
+			break;
+		default:
+			cout << "Invalid choice! Please enter 1 or 2." << endl;
+
+		}
+	}
+}
+
+void menu1(Groups *ArrGroupe, int size)
 {
 	cout << "======================================" << endl;
 	cout << "=              CHOISE                =" << endl;
@@ -20,20 +90,11 @@ void menu1(Groups ArrStudents)
 	cout << "Enter action number: " << endl;
 	int k;
 	cin >> k;
-	if (cin.fail())
-	{
-		cout << "Input error! Please enter a number." << endl;
-		cin.clear();
-		cin.ignore(10000000, '\n');
-	}
-	else
-	{
-		cin.ignore(10000000, '\n');
-	}
+	CheckCin();
 	switch (k)
 	{
 	case 1:
-
+		EnterDataManually (ArrGroupe, size);
 		break;
 	case 2:
 		break;
@@ -43,7 +104,7 @@ void menu1(Groups ArrStudents)
 		cout << "Invalid choice! Please enter 1, 2 or 3." << endl;
 	}
 }
-void menu(Groups ArrStudents)
+void menu(Groups *ArrGroupe, int size)
 {
 	while (1)
 	{
@@ -72,7 +133,7 @@ void menu(Groups ArrStudents)
 		switch (k)
 		{
 		case 1:
-			menu1(ArrStudents);
+			menu1(ArrGroupe, size);
 			break;
 		case 2:
 			break;
@@ -93,11 +154,10 @@ void menu(Groups ArrStudents)
 }
 int main()
 {
-	Groups* ArrStudents;
-	ArrStudents->quantity = 0;
-	ArrStudents = new Groups[ArrStudents->quantity];
+	int size = 0;
+	Groups* ArrGroupe = new Groups[size];
 
-	menu(*ArrStudents);
+	menu(ArrGroupe, size);
 
 	return 0;
 }
