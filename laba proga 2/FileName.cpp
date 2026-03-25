@@ -1,5 +1,7 @@
 #include<iostream>
-#include<string>
+#include<cmath>
+#include <fstream>
+#include <cstring>
 
 using namespace std;
 
@@ -94,7 +96,7 @@ void OutputInConsole(Groups *ArrGroupe, int &size)
 	case 1:
 		for (int i = 0; i < size; i++)
 		{
-			cout << i + 1 << ". Name groupe: " <<  ArrGroupe[i].NameGroupe << "\n Quantity students: " << ArrGroupe[i].quantity << endl;
+			cout << endl << i + 1 << ". Name groupe: " <<  ArrGroupe[i].NameGroupe << "\n Quantity students: " << ArrGroupe[i].quantity << endl;
 		}
 		break;
 	case 2:
@@ -107,10 +109,93 @@ void OutputInConsole(Groups *ArrGroupe, int &size)
 		cout << "Invalid choice! Please enter 1 or 2." << endl;
 	}
 }
+void ReadTxtFile(Groups*& ArrGroupe, int& size)
+{
+	char filename[256];
+	cout << "Enter the name of the .txt file: ";
+	cin.ignore(10000000, '\n');
+	cin.getline(filename, 256);
+
+	ifstream file(filename);
+
+	if (!file.is_open())
+	{
+		cout << "Error: Unable to open file " << filename << endl;
+		return;
+	}
+		
+	int count = 0;
+	char buffer[100];
+	int tempQuantity;
+
+	Groups* tempArr = nullptr;
+	int tempSize = 0;
+
+
+	while (file.getline(buffer, 100))
+	{
+
+		if (strlen(buffer) == 0)
+			continue;
+
+
+		if (!(file >> tempQuantity))
+		{
+			cout << "Error: Invalid data format in file. Skipping group: " << buffer << endl;
+			file.clear();
+			file.ignore(10000000, '\n');
+			continue;
+		}
+
+		file.ignore(10000000, '\n');
+
+		if (tempQuantity <= 0 || tempQuantity > 30)
+		{
+			cout << "Error: Invalid quantity (" << tempQuantity << ") for group \"" << buffer
+				<< "\". Quantity must be between 1 and 30. Skipping this group." << endl;
+			continue;
+		}
+
+		Groups* newArr = new Groups[tempSize + 1];
+
+		for (int i = 0; i < tempSize; i++)
+		{
+			newArr[i] = tempArr[i];
+		}
+
+		strcpy_s(newArr[tempSize].NameGroupe, buffer);
+		newArr[tempSize].quantity = tempQuantity;
+
+		delete[] tempArr;
+
+
+		tempArr = newArr;
+		tempSize++;
+	}
+
+	file.close();
+
+	if (tempSize > 0)
+	{
+		if (ArrGroupe != nullptr)
+			delete[] ArrGroupe;
+
+		ArrGroupe = tempArr;
+		size = tempSize;
+
+		cout << "Successfully read " << size << " groups from file " << filename << endl;
+	}
+	else
+	{
+		cout << "No data read from file " << filename << endl;
+		if (tempArr != nullptr)
+			delete[] tempArr;
+	}
+}
 void menu1(Groups*& ArrGroupe, int &size)
 {
 	cout << "======================================" << endl;
-	cout << "=              CHOISE                =" << endl;
+	cout << "=              CHOICE                =" << endl;
 	cout << "======================================" << endl;
 	cout << "1. Enter the data manually" << endl;
 	cout << "2. Enter data via a .txt file" << endl;
@@ -125,6 +210,7 @@ void menu1(Groups*& ArrGroupe, int &size)
 		EnterDataManually (ArrGroupe, size);
 		break;
 	case 2:
+		ReadTxtFile(ArrGroupe, size);
 		break;
 	case 3:
 		break;
