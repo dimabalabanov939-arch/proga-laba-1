@@ -1,0 +1,28 @@
+=== GROUPS DATA ===
+Total groups: 6
+===================
+
+Group #1:
+Name: PI-25-1
+Quantity of students: 28
+-------------------
+Group #2:
+Name: PI-25-2
+Quantity of students: 26
+-------------------
+Group #3:
+Name: PI-24-1
+Quantity of students: 23
+-------------------
+Group #4:
+Name: PI-24-2
+Quantity of students: 20
+-------------------
+Group #5:
+Name: PI-23-1
+Quantity of students: 19
+-------------------
+Group #6:
+Name: PI-23-2
+Quantity of students: 24
+-------------------

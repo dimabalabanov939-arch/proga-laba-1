@@ -109,6 +109,43 @@ void OutputInConsole(Groups *ArrGroupe, int &size)
 		cout << "Invalid choice! Please enter 1 or 2." << endl;
 	}
 }
+void OutputInTxtFile(Groups* ArrGroupe, int& size)
+{
+	if (size == 0)
+	{
+		cout << "Error: No data to write. The array is empty." << endl;
+		return;
+	}
+
+	char filename[256];
+	cout << "Enter the name of the .txt file to save: ";
+	cin.ignore(10000000, '\n');
+	cin.getline(filename, 256);
+
+	ofstream file(filename);
+
+	if (!file.is_open())
+	{
+		cout << "Error: Unable to create/open file " << filename << endl;
+		return;
+	}
+
+	file << "=== GROUPS DATA ===" << endl;
+	file << "Total groups: " << size << endl;
+	file << "===================" << endl << endl;
+
+	for (int i = 0; i < size; i++)
+	{
+		file << "Group #" << i + 1 << ":" << endl;
+		file << "Name: " << ArrGroupe[i].NameGroupe << endl;
+		file << "Quantity of students: " << ArrGroupe[i].quantity << endl;
+		file << "-------------------" << endl;
+	}
+
+	file.close();
+
+	cout << "Successfully wrote " << size << " groups to file " << filename << endl;
+}
 void ReadTxtFile(Groups*& ArrGroupe, int& size)
 {
 	char filename[256];
@@ -239,12 +276,54 @@ void menu2(Groups* ArrGroupe, int &size)
 		cin.get();
 		break;
 	case 2:
+		OutputInTxtFile(ArrGroupe, size);
 		break;
 	case 3:
 		break;
 	default:
 		cout << "Invalid choice! Please enter 1, 2 or 3." << endl;
 	}
+}
+void menu3(Groups*& ArrGroupe, int& size)
+{
+	cout << "Enter number groups for delete: ";
+	int n = 0;
+	cin >> n;
+	while (cin.fail() || n < 1 || n > size)
+	{
+		if (cin.fail()) {
+			cout << "Error! Please enter a number! ";
+		}
+		else if (n < 1) 
+		{
+			cout << "Error!!! Number groups can not be < 1! ";
+		}
+		else if (n > size) 
+		{
+			cout << "Error!!! Please enter number < " << size << "! ";
+		}
+		cout << "Enter number groups again: ";
+		cin >> n;
+		CheckCin();
+	}
+	Groups* newArr = new Groups[size - 1];
+
+	int newIndex = 0;
+	for (int i = 0; i < size; i++)
+	{
+		if (i != n - 1) 
+		{
+			newArr[newIndex] = ArrGroupe[i];
+			newIndex++;
+		}
+	}
+
+	delete[] ArrGroupe;
+
+	ArrGroupe = newArr;
+	size--;
+
+	cout << "Group successfully deleted!" << endl;
 }
 void menu(Groups *&ArrGroupe, int &size)
 {
@@ -255,10 +334,9 @@ void menu(Groups *&ArrGroupe, int &size)
 		cout << "======================================" << endl;
 		cout << "1. Enter the data" << endl;
 		cout << "2. Output data" << endl;
-		cout << "3. Add data" << endl;
-		cout << "4. Delete data" << endl;
-		cout << "5. Calculating the size" << endl;
-		cout << "6. Exit" << endl;
+		cout << "3. Delete data" << endl;
+		cout << "4. Calculating the size" << endl;
+		cout << "5. Exit" << endl;
 		cout << "Enter action number: " << endl;
 		int k;
 		cin >> k;
@@ -277,14 +355,14 @@ void menu(Groups *&ArrGroupe, int &size)
 			menu2(ArrGroupe, size);
 			break;
 		case 3:
+			menu3(ArrGroupe, size);
 			break;
 		case 4:
 			break;
 		case 5:
-			break;
-		case 6:
 			cout << "Exiting program..." << endl;
 			exit(0);
+			break;
 		default:
 			cout << "Invalid choice! Please enter 1, 2, 3, 4, 5 or 6." << endl;
 		}
