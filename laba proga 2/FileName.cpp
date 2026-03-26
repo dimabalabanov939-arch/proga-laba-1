@@ -146,6 +146,43 @@ void OutputInTxtFile(Groups* ArrGroupe, int& size)
 
 	cout << "Successfully wrote " << size << " groups to file " << filename << endl;
 }
+void OutputInBinFile(Groups* ArrGroupe, int& size)
+{
+	if (size == 0)
+	{
+		cout << "Error: No data to write. The array is empty." << endl;
+		return;
+	}
+
+	char filename[256];
+	cout << "Enter the name of the .bin file to save: ";
+	cin.ignore(10000000, '\n');
+	cin.getline(filename, 256);
+
+	ofstream file(filename, ios::binary);
+
+	if (!file.is_open())
+	{
+		cout << "Error: Unable to create/open file " << filename << endl;
+		return;
+	}
+
+	file.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+	for (int i = 0; i < size; i++)
+	{
+		file.write(reinterpret_cast<char*>(&ArrGroupe[i].quantity), sizeof(ArrGroupe[i].quantity));
+
+		int nameLength = strlen(ArrGroupe[i].NameGroupe) + 1;
+		file.write(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+
+		file.write(ArrGroupe[i].NameGroupe, nameLength);
+	}
+
+	file.close();
+
+	cout << "Successfully wrote " << size << " groups to binary file " << filename << endl;
+}
 void ReadTxtFile(Groups*& ArrGroupe, int& size)
 {
 	char filename[256];
@@ -229,6 +266,146 @@ void ReadTxtFile(Groups*& ArrGroupe, int& size)
 			delete[] tempArr;
 	}
 }
+void ReadBinFile(Groups*& ArrGroupe, int& size)
+{
+	char filename[256];
+	cout << "Enter the name of the .bin file: ";
+	cin.ignore(10000000, '\n');
+	cin.getline(filename, 256);
+
+	ifstream file(filename, ios::binary);
+
+	if (!file.is_open())
+	{
+		cout << "Error: Unable to open file " << filename << endl;
+		return;
+	}
+
+	int readSize;
+	file.read(reinterpret_cast<char*>(&readSize), sizeof(readSize));
+
+	if (file.fail())
+	{
+		cout << "Error: Failed to read data from binary file." << endl;
+		file.close();
+		return;
+	}
+
+	if (readSize <= 0)
+	{
+		cout << "Error: Invalid data in file (size = " << readSize << ")" << endl;
+		file.close();
+		return;
+	}
+
+	Groups* tempArr = nullptr;
+	int tempSize = 0;
+
+	for (int i = 0; i < readSize; i++)
+	{
+		int quantity;
+		file.read(reinterpret_cast<char*>(&quantity), sizeof(quantity));
+
+		if (file.fail())
+		{
+			cout << "Error: Failed to read quantity for group " << i + 1 << endl;
+			delete[] tempArr;
+			file.close();
+			return;
+		}
+
+		if (quantity <= 0 || quantity > 30)
+		{
+			cout << "Error: Invalid quantity (" << quantity << ") for group " << i + 1
+				<< ". Quantity must be between 1 and 30. Skipping this group." << endl;
+
+			int nameLength;
+			file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+			if (file.fail())
+			{
+				cout << "Error: Failed to skip invalid group data." << endl;
+				delete[] tempArr;
+				file.close();
+				return;
+			}
+
+			file.seekg(nameLength, ios::cur);
+			if (file.fail())
+			{
+				cout << "Error: Failed to skip invalid group data." << endl;
+				delete[] tempArr;
+				file.close();
+				return;
+			}
+			continue;
+		}
+
+		int nameLength;
+		file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+
+		if (file.fail() || nameLength <= 0 || nameLength > 100)
+		{
+			cout << "Error: Invalid name length for group " << i + 1 << endl;
+			delete[] tempArr;
+			file.close();
+			return;
+		}
+
+		char* buffer = new char[nameLength];
+		file.read(buffer, nameLength);
+
+		if (file.fail())
+		{
+			cout << "Error: Failed to read group name for group " << i + 1 << endl;
+			delete[] buffer;
+			delete[] tempArr;
+			file.close();
+			return;
+		}
+
+		if (strlen(buffer) == 0)
+		{
+			cout << "Error: Empty group name for group " << i + 1 << ". Skipping." << endl;
+			delete[] buffer;
+			continue;
+		}
+
+		Groups* newArr = new Groups[tempSize + 1];
+
+		for (int j = 0; j < tempSize; j++)
+		{
+			newArr[j] = tempArr[j];
+		}
+
+		strcpy_s(newArr[tempSize].NameGroupe, buffer);
+		newArr[tempSize].quantity = quantity;
+
+		delete[] buffer;
+		delete[] tempArr;
+
+		tempArr = newArr;
+		tempSize++;
+	}
+
+	file.close();
+
+	if (tempSize > 0)
+	{
+		if (ArrGroupe != nullptr)
+			delete[] ArrGroupe;
+
+		ArrGroupe = tempArr;
+		size = tempSize;
+
+		cout << "Successfully read " << size << " groups from binary file " << filename << endl;
+	}
+	else
+	{
+		cout << "No valid data read from binary file " << filename << endl;
+		if (tempArr != nullptr)
+			delete[] tempArr;
+	}
+}
 void menu1(Groups*& ArrGroupe, int &size)
 {
 	cout << "======================================" << endl;
@@ -250,6 +427,7 @@ void menu1(Groups*& ArrGroupe, int &size)
 		ReadTxtFile(ArrGroupe, size);
 		break;
 	case 3:
+		ReadBinFile(ArrGroupe, size);
 		break;
 	default:
 		cout << "Invalid choice! Please enter 1, 2 or 3." << endl;
@@ -279,6 +457,7 @@ void menu2(Groups* ArrGroupe, int &size)
 		OutputInTxtFile(ArrGroupe, size);
 		break;
 	case 3:
+		OutputInBinFile(ArrGroupe, size);
 		break;
 	default:
 		cout << "Invalid choice! Please enter 1, 2 or 3." << endl;
@@ -325,6 +504,67 @@ void menu3(Groups*& ArrGroupe, int& size)
 
 	cout << "Group successfully deleted!" << endl;
 }
+void menu4(Groups*& ArrGroupe, int& size)
+{
+	cout << "1. Calculating the size .txt file" << endl;
+	cout << "2. Calculating the size .bin file" << endl;
+	cout << "Enter action number: " << endl;
+	int k;
+	cin >> k;
+	if (cin.fail())
+	{
+		cout << "Input error! Please enter a number." << endl;
+		cin.clear();
+		cin.ignore(10000000, '\n');
+	}
+
+	char filename[256];
+
+	switch (k)
+	{
+	case 1:
+	{
+		cout << "Enter the name of the .txt file: ";
+		cin.ignore(10000000, '\n');
+		cin.getline(filename, 256);
+
+		ifstream txtFile(filename, ios::binary | ios::ate);
+		if (txtFile.is_open())
+		{
+			cout << ".txt file size: " << txtFile.tellg() << " bytes" << endl;
+			txtFile.close();
+		}
+		else
+		{
+			cout << "Error: Unable to open .txt file" << endl;
+		}
+		break;
+	}
+	case 2:
+	{
+		cout << "Enter the name of the .bin file: ";
+		cin.ignore(10000000, '\n');
+		cin.getline(filename, 256);
+
+		ifstream binFile(filename, ios::binary | ios::ate);
+		if (binFile.is_open())
+		{
+			cout << ".bin file size: " << binFile.tellg() << " bytes" << endl;
+			binFile.close();
+		}
+		else
+		{
+			cout << "Error: Unable to open .bin file" << endl;
+		}
+
+		cout << "\nPress Enter to continue...";
+		cin.get();
+		break;
+	}
+	default:
+		cout << "Invalid choice! Please enter 1 or 2." << endl;
+	}
+}
 void menu(Groups *&ArrGroupe, int &size)
 {
 	while (1)
@@ -358,6 +598,7 @@ void menu(Groups *&ArrGroupe, int &size)
 			menu3(ArrGroupe, size);
 			break;
 		case 4:
+			menu4(ArrGroupe, size);
 			break;
 		case 5:
 			cout << "Exiting program..." << endl;
